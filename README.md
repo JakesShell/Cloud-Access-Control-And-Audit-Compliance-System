@@ -1,78 +1,151 @@
-﻿# Secure Document Portal
+﻿# Cloud Access Control And Audit Compliance System
 
 ## Overview
 
-Secure Document Portal is a Flask-based web application that allows authenticated users to upload, encrypt, store, and download files through a simple browser interface.
+This project simulates a cloud access control and audit compliance workflow used to track user activity, enforce permissions, classify access events, and generate audit summaries.
 
-This project is positioned as a portfolio-ready demonstration of a real-world business scenario: an internal company portal where employees need a safer way to manage sensitive documents such as contracts, onboarding files, reports, audit evidence, HR forms, or internal records.
+It is designed to reflect how cloud support, SOC, and security operations teams review access behavior, investigate denied actions, and prove what happened through structured logs.
 
-Instead of storing files in plain form, the application encrypts uploaded files before saving them on the server and only allows the logged-in owner to download them again.
+---
 
-## Real-World Business Use Case
+## Session Output Preview
 
-A tool like this connects directly to common business needs.
+The screenshot below shows simulated user sessions where admin, analyst, and guest users attempt to read and write an internal document.
 
-### Example scenario
+![Session Output](screenshots/session-output.png)
 
-A small business, legal office, school administration team, HR department, or finance team often needs a secure internal document workflow for files such as:
+---
 
-- employee onboarding forms
-- internal policy documents
-- contracts and agreements
-- audit evidence and compliance files
-- client intake forms
-- school or office records
+## Audit Summary Preview
 
-In a real business environment, this kind of portal could serve as the first version of an internal secure file exchange system.
+The screenshot below shows the generated audit summary, including total events, successful access events, denied access attempts, and policy violation details.
 
-This portfolio project demonstrates important full-stack ideas that recruiters and clients care about:
+![Audit Summary](screenshots/audit-summary.png)
 
-- user registration and login
-- access control
-- encrypted file storage
-- protected download flow
-- persistent database records
-- web application structure using Flask and SQLite
+---
 
-## Key Features
+## Project Objective
 
-- User registration and login
-- Password hashing for stored credentials
-- File upload for authenticated users
-- File encryption before server storage
-- File listing for the logged-in user
-- Secure file download for the file owner
-- SQLite database for users and file records
-- Clean browser-based interface
+To simulate how security and cloud support teams answer access-control questions:
 
-## Tech Stack
+- Who accessed the file?
+- What action did the user attempt?
+- Was the action allowed or denied?
+- Was the event classified as normal activity or a policy violation?
+- Can the activity be summarized for audit review?
 
-- Python
-- Flask
-- Flask-Login
-- Flask-SQLAlchemy
-- SQLite
-- Cryptography
-- HTML/CSS
+---
+
+## Simulated Environment
+
+- Internal Document Access System
+- Role-Based User Permissions
+- Session-Based User Activity
+- Structured Access Logs
+- Audit Summary Report For Compliance Review
+
+---
+
+## Access Roles
+
+| Role | Read Access | Write Access |
+|---|---:|---:|
+| Admin | Yes | Yes |
+| Analyst | Yes | No |
+| Guest | No | No |
+
+---
+
+## Security Event Classification
+
+The system classifies each access attempt as:
+
+- AUTHORIZED_ACTIVITY when the user action is allowed
+- ACCESS_POLICY_VIOLATION when the user action is denied
+
+---
+
+## Audit Workflow
+
+1. Load user accounts from JSON data
+2. Simulate user sessions
+3. Attempt read and write actions
+4. Enforce role-based permissions
+5. Write structured audit logs
+6. Generate an audit summary report
+7. Review denied access attempts for compliance
+
+---
 
 ## Project Structure
 
-```text
-Secure-Document-Portal/
-|-- app.py
-|-- requirements.txt
-|-- README.md
-|-- login.html
-|-- register.html
-|-- home.html
-|-- upload.html
-|-- styles.css
-|-- uploads/
-|   |-- .gitkeep
-|-- docs/
-|   |-- images/
-|       |-- login-page.png
-|       |-- dashboard-page.png
-## Author Notes
+- data/users.json
+- files/sample_document.txt
+- logs/access_log.txt
+- reports/audit_summary.txt
+- screenshots/session-output.png
+- screenshots/audit-summary.png
+- access_control.py
+- audit_report.py
+- README.md
 
-This project was reviewed, debugged, and refactored into a working portfolio piece that demonstrates secure file handling concepts in a business-oriented web application.
+---
+
+## Technologies Used
+
+- Python
+- JSON
+- Role-Based Access Control
+- Audit Logging
+- Compliance Reporting
+- Security Event Classification
+
+---
+
+## How To Run
+
+Run the access-control session simulation:
+
+python access_control.py
+
+Generate the audit summary:
+
+python audit_report.py
+
+Then review:
+
+- logs/access_log.txt
+- reports/audit_summary.txt
+
+---
+
+## Planned Enhancements
+
+- Add User Authentication Simulation
+- Add Role-Based Dashboard Views
+- Export Audit Reports To CSV
+- Add Severity Levels For Denied Events
+- Add Cloud IAM-Style Policy Rules
+- Add Automated Compliance Alerts
+- Add Admin Review Workflow
+
+---
+
+## Real-World Relevance
+
+This project reflects security operations and cloud support responsibilities:
+
+- Reviewing Access Activity
+- Enforcing Permission Rules
+- Investigating Denied Access Attempts
+- Producing Audit Evidence
+- Supporting Compliance Review
+- Communicating Security Findings Clearly
+
+---
+
+## Professional Positioning
+
+This project is designed as an entry-level access control, audit logging, and compliance investigation simulation.
+
+It demonstrates the ability to track user activity, enforce permissions, classify policy violations, and generate audit-ready evidence.

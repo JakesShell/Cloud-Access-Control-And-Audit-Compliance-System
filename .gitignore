@@ -4,3 +4,11 @@ __pycache__/
 users.db
 uploads/*
 !uploads/.gitkeep
+
+# Local development files
+.venv/
+__pycache__/
+*.pyc
+instance/
+uploads/
+*.db

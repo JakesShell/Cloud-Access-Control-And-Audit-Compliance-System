@@ -1,0 +1,1 @@
+﻿Sample internal document used for access control and audit compliance testing.

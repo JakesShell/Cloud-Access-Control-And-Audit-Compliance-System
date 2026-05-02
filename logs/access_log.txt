@@ -1,0 +1,6 @@
+2026-05-02T17:30:30 | admin_user | admin | READ | sample_document.txt | SUCCESS | AUTHORIZED_ACTIVITY
+2026-05-02T17:30:30 | admin_user | admin | WRITE | sample_document.txt | SUCCESS | AUTHORIZED_ACTIVITY
+2026-05-02T17:30:30 | analyst_user | analyst | READ | sample_document.txt | SUCCESS | AUTHORIZED_ACTIVITY
+2026-05-02T17:30:30 | analyst_user | analyst | WRITE | sample_document.txt | DENIED | ACCESS_POLICY_VIOLATION
+2026-05-02T17:30:30 | guest_user | guest | READ | sample_document.txt | DENIED | ACCESS_POLICY_VIOLATION
+2026-05-02T17:30:30 | guest_user | guest | WRITE | sample_document.txt | DENIED | ACCESS_POLICY_VIOLATION
