@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-05-05T12:35:55",
+  "total_documents": 4,
+  "total_access_events": 5,
+  "granted_attempts": 3,
+  "denied_attempts": 2,
+  "high_risk_events": 2,
+  "compliance_failures": 2,
+  "events": [
+    {
+      "timestamp": "2026-05-05T12:35:55",
+      "username": "analyst",
+      "role": "Support Analyst",
+      "document": "Customer Data Handling Policy",
+      "classification": "Restricted",
+      "action": "VIEW",
+      "result": "DENIED",
+      "risk_level": "HIGH",
+      "compliance_status": "FAILED"
+    },
+    {
+      "timestamp": "2026-05-05T12:35:51",
+      "username": "analyst",
+      "role": "Support Analyst",
+      "document": "Vendor Access Review Notes",
+      "classification": "Confidential",
+      "action": "VIEW",
+      "result": "GRANTED",
+      "risk_level": "LOW",
+      "compliance_status": "PASS"
+    },
+    {
+      "timestamp": "2026-05-05T12:35:46",
+      "username": "analyst",
+      "role": "Support Analyst",
+      "document": "Public Service Status Notes",
+      "classification": "Internal",
+      "action": "VIEW",
+      "result": "GRANTED",
+      "risk_level": "LOW",
+      "compliance_status": "PASS"
+    },
+    {
+      "timestamp": "2026-05-05T12:35:16",
+      "username": "analyst",
+      "role": "Support Analyst",
+      "document": "Cloud Incident Response Playbook",
+      "classification": "Confidential",
+      "action": "VIEW",
+      "result": "GRANTED",
+      "risk_level": "LOW",
+      "compliance_status": "PASS"
+    },
+    {
+      "timestamp": "2026-05-05T12:35:07",
+      "username": "analyst",
+      "role": "Support Analyst",
+      "document": "Customer Data Handling Policy",
+      "classification": "Restricted",
+      "action": "VIEW",
+      "result": "DENIED",
+      "risk_level": "HIGH",
+      "compliance_status": "FAILED"
+    }
+  ]
+}

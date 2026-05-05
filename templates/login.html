@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cloud Secure Document Command Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="login-body">
+    <section class="login-shell">
+        <div class="login-card">
+            <p class="eyebrow">Cloud Support Operations Lab</p>
+            <h1>Secure Document Command Center</h1>
+            <p class="muted">
+                Access control, document classification, audit trails, compliance visibility,
+                and evidence reporting for cloud security operations.
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <label>Username</label>
+                <input name="username" placeholder="admin" required>
+
+                <label>Password</label>
+                <input name="password" type="password" placeholder="admin123" required>
+
+                <button type="submit">Enter Command Center</button>
+            </form>
+
+            <div class="demo-box">
+                Demo accounts: admin/admin123, analyst/analyst123, viewer/viewer123
+            </div>
+        </div>
+    </section>
+</body>
+</html>

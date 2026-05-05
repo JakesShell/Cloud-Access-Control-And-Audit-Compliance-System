@@ -1,0 +1,30 @@
+[
+  {
+    "doc_id": "DOC-001",
+    "title": "Customer Data Handling Policy",
+    "classification": "Restricted",
+    "owner": "Security Team",
+    "required_role": "Security Admin"
+  },
+  {
+    "doc_id": "DOC-002",
+    "title": "Cloud Incident Response Playbook",
+    "classification": "Confidential",
+    "owner": "Operations Team",
+    "required_role": "Support Analyst"
+  },
+  {
+    "doc_id": "DOC-003",
+    "title": "Public Service Status Notes",
+    "classification": "Internal",
+    "owner": "Support Team",
+    "required_role": "Read Only"
+  },
+  {
+    "doc_id": "DOC-004",
+    "title": "Vendor Access Review Notes",
+    "classification": "Confidential",
+    "owner": "Compliance Team",
+    "required_role": "Support Analyst"
+  }
+]

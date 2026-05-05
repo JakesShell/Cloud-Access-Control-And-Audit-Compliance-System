@@ -1,196 +1,290 @@
-﻿from flask import Flask, render_template, request, redirect, url_for, flash, send_file
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-from cryptography.fernet import Fernet
-from io import BytesIO
+﻿from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime
-import os
+import json
+from pathlib import Path
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+app = Flask(__name__)
+app.secret_key = "cloud-secure-document-command-center"
 
-app = Flask(__name__, template_folder=BASE_DIR)
-app.config["SECRET_KEY"] = "change-this-in-production"
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'users.db')}"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+DATA_DIR = Path("data")
+LOG_DIR = Path("logs")
+REPORT_DIR = Path("reports")
 
-db = SQLAlchemy(app)
+USERS_FILE = DATA_DIR / "portal_users.json"
+DOCUMENTS_FILE = DATA_DIR / "documents.json"
+AUDIT_LOG_FILE = LOG_DIR / "document_access_audit.log"
+REPORT_FILE = REPORT_DIR / "access_compliance_report.json"
 
-login_manager = LoginManager()
-login_manager.login_view = "login"
-login_manager.init_app(app)
-
-FERNET_KEY = b"8bQ1aNHz9v2H8Mln4Q6K0AH4K3X4mTkh5B0k0e1W6dY="
-fernet = Fernet(FERNET_KEY)
-
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+DATA_DIR.mkdir(exist_ok=True)
+LOG_DIR.mkdir(exist_ok=True)
+REPORT_DIR.mkdir(exist_ok=True)
 
 
-class FileRecord(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    original_filename = db.Column(db.String(255), nullable=False)
-    stored_filename = db.Column(db.String(255), unique=True, nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+def seed_data():
+    USERS_FILE.write_text(
+        json.dumps(
+            [
+                {
+                    "username": "admin",
+                    "password": "admin123",
+                    "role": "Security Admin"
+                },
+                {
+                    "username": "analyst",
+                    "password": "analyst123",
+                    "role": "Support Analyst"
+                },
+                {
+                    "username": "viewer",
+                    "password": "viewer123",
+                    "role": "Read Only"
+                }
+            ],
+            indent=2
+        ),
+        encoding="utf-8"
+    )
+
+    DOCUMENTS_FILE.write_text(
+        json.dumps(
+            [
+                {
+                    "doc_id": "DOC-001",
+                    "title": "Customer Data Handling Policy",
+                    "classification": "Restricted",
+                    "owner": "Security Team",
+                    "required_role": "Security Admin"
+                },
+                {
+                    "doc_id": "DOC-002",
+                    "title": "Cloud Incident Response Playbook",
+                    "classification": "Confidential",
+                    "owner": "Operations Team",
+                    "required_role": "Support Analyst"
+                },
+                {
+                    "doc_id": "DOC-003",
+                    "title": "Public Service Status Notes",
+                    "classification": "Internal",
+                    "owner": "Support Team",
+                    "required_role": "Read Only"
+                },
+                {
+                    "doc_id": "DOC-004",
+                    "title": "Vendor Access Review Notes",
+                    "classification": "Confidential",
+                    "owner": "Compliance Team",
+                    "required_role": "Support Analyst"
+                }
+            ],
+            indent=2
+        ),
+        encoding="utf-8"
+    )
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
+def load_json(path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def ensure_upload_folder():
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+def append_audit_event(username, role, document, action, result, risk_level, compliance_status):
+    event = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "username": username,
+        "role": role,
+        "document": document["title"],
+        "classification": document["classification"],
+        "action": action,
+        "result": result,
+        "risk_level": risk_level,
+        "compliance_status": compliance_status
+    }
+
+    with AUDIT_LOG_FILE.open("a", encoding="utf-8") as log:
+        log.write(json.dumps(event) + "\n")
+
+
+def load_audit_events():
+    if not AUDIT_LOG_FILE.exists():
+        return []
+
+    events = []
+
+    with AUDIT_LOG_FILE.open("r", encoding="utf-8") as log:
+        for line in log:
+            if line.strip():
+                events.append(json.loads(line))
+
+    return list(reversed(events))
+
+
+def role_rank(role):
+    ranks = {
+        "Read Only": 1,
+        "Support Analyst": 2,
+        "Security Admin": 3
+    }
+
+    return ranks.get(role, 0)
+
+
+def can_access(user_role, required_role):
+    return role_rank(user_role) >= role_rank(required_role)
+
+
+def classify_risk(result, classification):
+    if result == "DENIED" and classification == "Restricted":
+        return "HIGH", "FAILED"
+
+    if result == "DENIED":
+        return "MEDIUM", "REVIEW REQUIRED"
+
+    return "LOW", "PASS"
+
+
+def build_metrics(events, documents):
+    denied = sum(1 for event in events if event["result"] == "DENIED")
+    granted = sum(1 for event in events if event["result"] == "GRANTED")
+    high_risk = sum(1 for event in events if event["risk_level"] == "HIGH")
+    failed = sum(1 for event in events if event["compliance_status"] == "FAILED")
+
+    return {
+        "total_documents": len(documents),
+        "access_attempts": len(events),
+        "granted_attempts": granted,
+        "denied_attempts": denied,
+        "high_risk_events": high_risk,
+        "failed_compliance": failed
+    }
+
+
+def write_compliance_report(events, documents):
+    report = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "total_documents": len(documents),
+        "total_access_events": len(events),
+        "granted_attempts": sum(1 for event in events if event["result"] == "GRANTED"),
+        "denied_attempts": sum(1 for event in events if event["result"] == "DENIED"),
+        "high_risk_events": sum(1 for event in events if event["risk_level"] == "HIGH"),
+        "compliance_failures": sum(1 for event in events if event["compliance_status"] == "FAILED"),
+        "events": events
+    }
+
+    REPORT_FILE.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
 
 @app.route("/")
 def index():
-    if current_user.is_authenticated:
-        return redirect(url_for("home"))
-    return redirect(url_for("login"))
+    if "username" not in session:
+        return redirect(url_for("login"))
 
-
-@app.route("/styles.css")
-def static_files():
-    return send_file(os.path.join(BASE_DIR, "styles.css"))
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("home"))
+    seed_data()
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        user = User.query.filter_by(username=username).first()
+        users = load_json(USERS_FILE)
+        user = next(
+            (
+                user_record
+                for user_record in users
+                if user_record["username"] == username and user_record["password"] == password
+            ),
+            None
+        )
 
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            flash("Logged in successfully.", "success")
-            return redirect(url_for("home"))
+        if user:
+            session["username"] = user["username"]
+            session["role"] = user["role"]
+            return redirect(url_for("dashboard"))
 
-        flash("Invalid username or password.", "error")
+        flash("Invalid login details. Try admin / admin123.", "error")
 
     return render_template("login.html")
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for("home"))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-
-        if not username or not password:
-            flash("Username and password are required.", "error")
-            return render_template("register.html")
-
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash("That username is already taken.", "error")
-            return render_template("register.html")
-
-        hashed_password = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("login"))
-
-    return render_template("register.html")
-
-
-@app.route("/home")
-@login_required
-def home():
-    files = (
-        FileRecord.query.filter_by(owner_id=current_user.id)
-        .order_by(FileRecord.uploaded_at.desc())
-        .all()
-    )
-    return render_template("home.html", files=files)
-
-
-@app.route("/upload", methods=["GET", "POST"])
-@login_required
-def upload():
-    if request.method == "POST":
-        uploaded_file = request.files.get("file")
-
-        if not uploaded_file or uploaded_file.filename == "":
-            flash("Please choose a file to upload.", "error")
-            return redirect(url_for("upload"))
-
-        safe_name = secure_filename(uploaded_file.filename)
-        if not safe_name:
-            flash("Invalid filename.", "error")
-            return redirect(url_for("upload"))
-
-        stored_filename = f"{current_user.id}_{int(datetime.utcnow().timestamp())}_{safe_name}"
-        file_path = os.path.join(app.config["UPLOAD_FOLDER"], stored_filename)
-
-        encrypted_data = fernet.encrypt(uploaded_file.read())
-        with open(file_path, "wb") as file_handle:
-            file_handle.write(encrypted_data)
-
-        record = FileRecord(
-            original_filename=safe_name,
-            stored_filename=stored_filename,
-            owner_id=current_user.id,
-        )
-        db.session.add(record)
-        db.session.commit()
-
-        flash("File uploaded and encrypted successfully.", "success")
-        return redirect(url_for("home"))
-
-    return render_template("upload.html")
-
-
-@app.route("/download/<int:file_id>")
-@login_required
-def download(file_id):
-    record = FileRecord.query.filter_by(id=file_id, owner_id=current_user.id).first_or_404()
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], record.stored_filename)
-
-    if not os.path.exists(file_path):
-        flash("File not found on server.", "error")
-        return redirect(url_for("home"))
-
-    with open(file_path, "rb") as file_handle:
-        encrypted_data = file_handle.read()
-
-    decrypted_data = fernet.decrypt(encrypted_data)
-
-    return send_file(
-        BytesIO(decrypted_data),
-        as_attachment=True,
-        download_name=record.original_filename,
-    )
-
-
 @app.route("/logout")
-@login_required
 def logout():
-    logout_user()
-    flash("You have been logged out.", "success")
+    session.clear()
     return redirect(url_for("login"))
 
 
+@app.route("/dashboard")
+def dashboard():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    seed_data()
+
+    documents = load_json(DOCUMENTS_FILE)
+    events = load_audit_events()
+    metrics = build_metrics(events, documents)
+
+    write_compliance_report(events, documents)
+
+    return render_template(
+        "dashboard.html",
+        documents=documents,
+        events=events[:12],
+        metrics=metrics,
+        username=session["username"],
+        role=session["role"]
+    )
+
+
+@app.route("/access/<doc_id>", methods=["POST"])
+def access_document(doc_id):
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    documents = load_json(DOCUMENTS_FILE)
+    document = next((doc for doc in documents if doc["doc_id"] == doc_id), None)
+
+    if not document:
+        flash("Document not found.", "error")
+        return redirect(url_for("dashboard"))
+
+    allowed = can_access(session["role"], document["required_role"])
+    result = "GRANTED" if allowed else "DENIED"
+    risk_level, compliance_status = classify_risk(result, document["classification"])
+
+    append_audit_event(
+        session["username"],
+        session["role"],
+        document,
+        "VIEW",
+        result,
+        risk_level,
+        compliance_status
+    )
+
+    if allowed:
+        flash(f"Access granted: {document['title']}", "success")
+    else:
+        flash(f"Access denied: {document['title']} requires {document['required_role']}.", "error")
+
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/report")
+def report():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    events = load_audit_events()
+    documents = load_json(DOCUMENTS_FILE)
+
+    write_compliance_report(events, documents)
+
+    return REPORT_FILE.read_text(encoding="utf-8"), 200, {"Content-Type": "application/json"}
+
+
 if __name__ == "__main__":
-    ensure_upload_folder()
-    with app.app_context():
-        db.create_all()
+    seed_data()
     app.run(debug=True)

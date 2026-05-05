@@ -2,150 +2,127 @@
 
 ## Overview
 
-This project simulates a cloud access control and audit compliance workflow used to track user activity, enforce permissions, classify access events, and generate audit summaries.
+This project simulates a cloud secure document access and audit compliance workflow. It includes a Flask-based command center for reviewing protected documents, requesting access, enforcing role-based permissions, tracking access attempts, classifying risk, and generating compliance evidence.
 
-It is designed to reflect how cloud support, SOC, and security operations teams review access behavior, investigate denied actions, and prove what happened through structured logs.
+The system reflects how cloud support, SOC, and security operations teams monitor sensitive document access, investigate denied requests, and produce audit-ready reports.
 
----
-
-## Session Output Preview
-
-The screenshot below shows simulated user sessions where admin, analyst, and guest users attempt to read and write an internal document.
-
-![Session Output](screenshots/session-output.png)
 
 ---
 
-## Audit Summary Preview
+## Dashboard Preview
 
-The screenshot below shows the generated audit summary, including total events, successful access events, denied access attempts, and policy violation details.
+### Login Page
 
-![Audit Summary](screenshots/audit-summary.png)
+![Login Page](screenshots/login-page.png)
 
----
+### Security Operations Dashboard
 
-## Project Objective
-
-To simulate how security and cloud support teams answer access-control questions:
-
-- Who accessed the file?
-- What action did the user attempt?
-- Was the action allowed or denied?
-- Was the event classified as normal activity or a policy violation?
-- Can the activity be summarized for audit review?
+![Security Operations Dashboard](screenshots/security-dashboard.png)
 
 ---
 
-## Simulated Environment
+## Core Features
 
-- Internal Document Access System
-- Role-Based User Permissions
-- Session-Based User Activity
-- Structured Access Logs
-- Audit Summary Report For Compliance Review
-
----
-
-## Access Roles
-
-| Role | Read Access | Write Access |
-|---|---:|---:|
-| Admin | Yes | Yes |
-| Analyst | Yes | No |
-| Guest | No | No |
+- Flask-Based Secure Document Portal
+- Role-Based Access Control
+- Document Sensitivity Classification
+- Access Granted And Access Denied Tracking
+- Security Event Classification
+- Audit Trail Generation
+- Compliance Status Reporting
+- Executive Dashboard Metrics
+- JSON Compliance Report Endpoint
+- Enterprise-Style Command Center UI
 
 ---
 
-## Security Event Classification
+## Demo Accounts
 
-The system classifies each access attempt as:
-
-- AUTHORIZED_ACTIVITY when the user action is allowed
-- ACCESS_POLICY_VIOLATION when the user action is denied
+| Username | Password | Role |
+|---|---|---|
+| admin | admin123 | Security Admin |
+| analyst | analyst123 | Support Analyst |
+| viewer | viewer123 | Read Only |
 
 ---
 
-## Audit Workflow
+## Simulated Access Rules
 
-1. Load user accounts from JSON data
-2. Simulate user sessions
-3. Attempt read and write actions
-4. Enforce role-based permissions
-5. Write structured audit logs
-6. Generate an audit summary report
-7. Review denied access attempts for compliance
+| Classification | Required Role |
+|---|---|
+| Restricted | Security Admin |
+| Confidential | Support Analyst |
+| Internal | Read Only |
+
+A higher role can access documents assigned to lower roles.
+
+---
+
+## Dashboard Workflow
+
+1. User logs into the command center.
+2. The dashboard displays classified documents.
+3. User requests access to protected documents.
+4. The system evaluates role permissions.
+5. Access is granted or denied.
+6. Each attempt is written to the audit log.
+7. Risk level and compliance status are assigned.
+8. The dashboard updates executive metrics.
+9. JSON compliance evidence can be exported.
 
 ---
 
 ## Project Structure
 
-- data/users.json
-- files/sample_document.txt
-- logs/access_log.txt
-- reports/audit_summary.txt
-- screenshots/session-output.png
-- screenshots/audit-summary.png
-- access_control.py
-- audit_report.py
+- app.py
+- templates/login.html
+- templates/dashboard.html
+- static/css/styles.css
+- data/portal_users.json
+- data/documents.json
+- logs/document_access_audit.log
+- reports/access_compliance_report.json
+- screenshots/
 - README.md
-
----
-
-## Technologies Used
-
-- Python
-- JSON
-- Role-Based Access Control
-- Audit Logging
-- Compliance Reporting
-- Security Event Classification
+- requirements.txt
 
 ---
 
 ## How To Run
 
-Run the access-control session simulation:
+Install dependencies:
 
-python access_control.py
+pip install -r requirements.txt
 
-Generate the audit summary:
+Run the Flask app:
 
-python audit_report.py
+python app.py
 
-Then review:
+Open:
 
-- logs/access_log.txt
-- reports/audit_summary.txt
+http://127.0.0.1:5000
 
 ---
 
-## Planned Enhancements
+## JSON Compliance Report
 
-- Add User Authentication Simulation
-- Add Role-Based Dashboard Views
-- Export Audit Reports To CSV
-- Add Severity Levels For Denied Events
-- Add Cloud IAM-Style Policy Rules
-- Add Automated Compliance Alerts
-- Add Admin Review Workflow
+After generating access events in the dashboard, open:
+
+http://127.0.0.1:5000/report
+
+This returns a structured JSON report containing access attempts, denied requests, high-risk events, and compliance failures.
 
 ---
 
 ## Real-World Relevance
 
-This project reflects security operations and cloud support responsibilities:
+This project reflects cloud support and security operations responsibilities:
 
-- Reviewing Access Activity
-- Enforcing Permission Rules
-- Investigating Denied Access Attempts
-- Producing Audit Evidence
-- Supporting Compliance Review
-- Communicating Security Findings Clearly
+- Validating Secure Access To Sensitive Documents
+- Monitoring Denied Access Attempts
+- Tracking Audit Evidence
+- Identifying High-Risk Access Events
+- Supporting Compliance Visibility
+- Producing Structured Reports For Investigation
+- Communicating Access Risk Clearly Through A Dashboard
 
----
-
-## Professional Positioning
-
-This project is designed as an entry-level access control, audit logging, and compliance investigation simulation.
-
-It demonstrates the ability to track user activity, enforce permissions, classify policy violations, and generate audit-ready evidence.

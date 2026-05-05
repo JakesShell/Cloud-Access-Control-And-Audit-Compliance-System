@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Security Command Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-mark">CS</div>
+                <div>
+                    <h2>Command Center</h2>
+                    <p>Document Security</p>
+                </div>
+            </div>
+
+            <nav>
+                <a class="active">Dashboard</a>
+                <a>Documents</a>
+                <a>Audit Trail</a>
+                <a>Compliance</a>
+            </nav>
+        </div>
+
+        <div class="operator">
+            <span>Operator</span>
+            <strong>{{ username }}</strong>
+            <small>{{ role }}</small>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Cloud Secure Document Access And Audit System</p>
+                <h1>Security Operations Dashboard</h1>
+            </div>
+            <a class="report-link" href="{{ url_for('report') }}" target="_blank">View JSON Report</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="message-row">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <span>Total Documents</span>
+                <strong>{{ metrics.total_documents }}</strong>
+                <p>Classified assets under access control</p>
+            </div>
+
+            <div class="metric-card">
+                <span>Access Attempts</span>
+                <strong>{{ metrics.access_attempts }}</strong>
+                <p>Tracked audit events</p>
+            </div>
+
+            <div class="metric-card success">
+                <span>Granted Attempts</span>
+                <strong>{{ metrics.granted_attempts }}</strong>
+                <p>Successful controlled access events</p>
+            </div>
+
+            <div class="metric-card warning">
+                <span>Denied Attempts</span>
+                <strong>{{ metrics.denied_attempts }}</strong>
+                <p>Blocked access requests</p>
+            </div>
+
+            <div class="metric-card danger">
+                <span>High-Risk Events</span>
+                <strong>{{ metrics.high_risk_events }}</strong>
+                <p>Restricted access failures</p>
+            </div>
+
+            <div class="metric-card danger">
+                <span>Compliance Failures</span>
+                <strong>{{ metrics.failed_compliance }}</strong>
+                <p>Events requiring urgent review</p>
+            </div>
+        </section>
+
+        <section class="grid-two">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Protected Assets</p>
+                        <h2>Document Access Control</h2>
+                    </div>
+                </div>
+
+                <div class="document-list">
+                    {% for doc in documents %}
+                    <div class="document-card">
+                        <div>
+                            <span class="classification {{ doc.classification|lower }}">{{ doc.classification }}</span>
+                            <h3>{{ doc.title }}</h3>
+                            <p>{{ doc.doc_id }} • Owner: {{ doc.owner }} • Required Role: {{ doc.required_role }}</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('access_document', doc_id=doc.doc_id) }}">
+                            <button>Request Access</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel alert-panel">
+                <p class="eyebrow">Compliance Signal</p>
+                <h2>Executive Risk Summary</h2>
+
+                {% if metrics.high_risk_events > 0 %}
+                    <div class="risk-status failed">FAILED</div>
+                    <p>Restricted document access failures detected. Immediate access review required.</p>
+                {% elif metrics.denied_attempts > 0 %}
+                    <div class="risk-status review">REVIEW REQUIRED</div>
+                    <p>Denied access attempts detected. Review access patterns and user roles.</p>
+                {% else %}
+                    <div class="risk-status pass">PASS</div>
+                    <p>No high-risk access failures detected in the current audit trail.</p>
+                {% endif %}
+
+                <div class="action-plan">
+                    <h3>Recommended Action Plan</h3>
+                    <ol>
+                        <li>Review denied document access attempts.</li>
+                        <li>Verify user roles against document classification.</li>
+                        <li>Investigate restricted document access failures.</li>
+                        <li>Export JSON report for compliance evidence.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Audit Visibility</p>
+                    <h2>Recent Access Events</h2>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Document</th>
+                        <th>Result</th>
+                        <th>Risk</th>
+                        <th>Compliance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.timestamp }}</td>
+                        <td>{{ event.username }}</td>
+                        <td>{{ event.role }}</td>
+                        <td>{{ event.document }}</td>
+                        <td><span class="pill {{ event.result|lower }}">{{ event.result }}</span></td>
+                        <td><span class="pill {{ event.risk_level|lower }}">{{ event.risk_level }}</span></td>
+                        <td>{{ event.compliance_status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="empty">No audit events yet. Request access to generate activity.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>
+
